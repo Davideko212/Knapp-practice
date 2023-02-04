@@ -1,0 +1,10 @@
+1) take input of all 100000 packets
+1.1) sort these all by total area size in one big list
+1.2) map all the packets in the list to a map with the truckId and the Packets themselves
+
+2) Go through the map by each truckId
+2.1) Since the first packet is always the biggest, create a Pallete based on it
+2.2) Go to the second packet and see if i can fit on the same Pallete as the first, maybe even the same layer
+2.x) Repeat with all other packets
+2.xi) If coming across a Pallete with no more space for the current Packet, make a new Pallete with the min requirements for this Packet
+2.xx) Iterate

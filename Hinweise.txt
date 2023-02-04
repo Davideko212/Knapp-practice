@@ -1,0 +1,18 @@
+
+es gibt immer ein Java Projekt und eine Anleitung.
+
+Vorort wird/wurde die Anleitung durchgegangen und im Detail besprochen -- vor dem Arbeitsbeginn, zählt nicht zur Arbeitszeit.
+
+WICHTIG: Anleitung lesen, was ist zu tun, Hinweise zur API beachten -- versuche die API zu verstehen.
+
+Beim Programmieren -- reine Arbeitszeit ca. 2,5 bis 3 Stunden:
+
+* nicht verzweifeln! siehe: The Hitchhiker's Guide to the Galaxy - Rückseite: Don't panic!
+  * es ist nicht **die Beste Lösung** gefragt
+    * meist reicht irgendeine
+      * besser eine schlechte Lösung die alle Order/Aufträge/etc. löst als eine gute die viele offene Order/Aufträge/etc. hat
+    * man braucht am Anfang nicht den totalen Plan zur Lösung
+    * meist reicht: eine/die erste/die nächste Order/Auftrag/etc. lösen, ein paar weitere gehen, warum hackt es dann?
+  * versuche die API zu verstehen -- manchmal gibt es eine hilfreiche "dummy" Methode mit API Aufrufen.
+* vieles geht mit streams einfacher oder eleganter, Schleifen sind aber auch nicht falsch
+* git kann hilfreich sein, notfalls kann man dann etwas rückgängig machen (geht auch mit IntelliJ lokal History)

@@ -1,0 +1,6 @@
+ZONE_SCHNELLDREHER;false;false;false;10;50
+ZONE_LANGSAMDREHER;false;false;false;20;50
+ZONE_GEKUEHLT;true;false;false;30;50
+ZONE_GEFROREN;false;true;false;40;50
+ZONE_TRESOR;false;false;true;50;50
+ZONE_TRESOR_GEKUEHLT;true;false;true;60;50
