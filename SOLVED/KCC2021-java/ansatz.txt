@@ -8,3 +8,4 @@
 2.x) Repeat with all other packets
 2.xi) If coming across a Pallete with no more space for the current Packet, make a new Pallete with the min requirements for this Packet
 2.xx) Iterate
+

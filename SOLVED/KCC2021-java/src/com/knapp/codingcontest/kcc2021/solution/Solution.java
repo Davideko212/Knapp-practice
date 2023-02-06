@@ -69,7 +69,10 @@ public class Solution {
 
         // Go through each truck and its assigned stuff
         for (Map.Entry<Integer, List<Packet>> entry : packetMap.entrySet()) {
+
             int truckId = entry.getKey();
+            System.out.println(truckId);
+
             List<Packet> packets = entry.getValue();
             List<Pallet> pallets = new ArrayList<>();
 
@@ -87,10 +90,6 @@ public class Solution {
                 // Check if the packet fits on an existing pallet of this truck (going through each layer)
                 palletbreak:
                 for (Pallet pallet : pallets) {
-                    if (pallet.getCurrentStackedHeight() == 10) {
-                        continue;
-                    }
-
                     PalletType pt = pallet.getType();
 
                     // Check if adding the packet would exceed the pallet weight limit
@@ -113,20 +112,41 @@ public class Solution {
                             continue;
                         }
 
+                        // See where there is free space on the layer
+                        int[][] blocked = new int[pt.getWidth()][pt.getLength()];
+                        for (Map.Entry<PacketPos, Packet> packetEntry : currentLayer.getPackets().entrySet()) {
+                            PacketPos pos = packetEntry.getKey();
+                            Packet packet1 = packetEntry.getValue();
+
+                            for (int x = pos.getX(); x < pos.getX()+packet1.getLength(); x++) {
+                                for (int y = pos.getY(); y < pos.getY()+packet1.getWidth(); y++) {
+                                    blocked[y][x] = 1;
+                                }
+                            }
+                        }
+
                         // Go through each possible position of the packet on the layer to see if it would fit
-                        for (int x = 0; x < (pt.getLength() - packet.getLength()); x++) {
-                            for (int y = 0; y < (pt.getWidth() - packet.getWidth()); y++) {
+                        for (int x = 0; x <= (pt.getLength() - packet.getLength()); x++) {
+                            for (int y = 0; y <= (pt.getWidth() - packet.getWidth()); y++) {
+                                if (blocked[y][x] == 1) {
+                                    continue;
+                                }
+
+                                //System.out.println("x: " + x);
+                                //System.out.println("y: " + y);
+
                                 // Try placing packet at every possible position
                                 try {
                                     warehouse.putPacket(pallet, packet, x, y, false);
                                     placed = true;
                                     break palletbreak;
-                                } catch (PalletExtendsViolatedException e) {
+                                } catch (Exception e) {
                                     try {
+                                        // DONT WORK
                                         warehouse.putPacket(pallet, packet, x, y, true);
                                         placed = true;
                                         break palletbreak;
-                                    } catch (PalletExtendsViolatedException ignored) {
+                                    } catch (Exception ignored) {
 
                                     }
                                 }
@@ -143,7 +163,8 @@ public class Solution {
                 }
             }
 
-            System.out.println(pallets.get(pallets.size()-1));
+            //System.out.println(pallets.get(0));
+            //System.out.println(pallets.get(1));
         }
     }
 
