@@ -13,12 +13,10 @@
 package com.knapp.codingcontest.kcc2019.solution;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 import com.knapp.codingcontest.kcc2019.data.*;
-import com.knapp.codingcontest.kcc2019.warehouse.Warehouse;
-import com.knapp.codingcontest.kcc2019.warehouse.WarehouseBuffer;
-import com.knapp.codingcontest.kcc2019.warehouse.WarehouseLane;
-import com.knapp.codingcontest.kcc2019.warehouse.WarehouseStatistics;
+import com.knapp.codingcontest.kcc2019.warehouse.*;
 
 /**
  * This is the code YOU have to provide
@@ -36,44 +34,45 @@ public class Solution {
 
     private final InputData input;
     private final Warehouse warehouse;
-    // K: ProductID
-    // V: List of Orders starting with that Product
-    private Map<String, List<Order>> poMap;
-    private Map<String, Integer> paMap;
+    private List<Order> orders;
+    private List<WarehouseLane> lanes;
+    private Order currentOrder;
+    private List<OrderLine> currentLines;
+    int currentLane;
+    int nextReleasing;
+    int currentSmall;
+    int currentLarge;
+
 
     // ----------------------------------------------------------------------------
 
-    public Solution(final Warehouse warehouse, final InputData input) {
+    public Solution(final Warehouse warehouse, final InputData input) throws LaneOverflowException, InvalidQuantityException, MissingPrecedingFetchException, LaneNotAvailableException, OrderLineExceededException, ProductMismatchException, OnlyOneFetchPerTickAllowedException {
         this.input = input;
         this.warehouse = warehouse;
-        this.poMap = new HashMap<>();
-        this.paMap = new HashMap<>();
+        this.orders = new ArrayList<>(input.getOrders());
+        ArrayList<Order> temp = new ArrayList<>();
 
-        List<Order> orders = input.getOrders();
-
-        for (Order order : orders) {
-            OrderLine ol = order.getOrderLines().get(0);
-            String first = ol.getProductCode();
-
-            if (poMap.containsKey(first)) {
-                List<Order> currentPo = poMap.get(first);
-                currentPo.add(order);
-                poMap.replace(first, currentPo);
-
-                int currentPa = paMap.get(first);
-                currentPa += ol.getRequestedQuantity();
-                paMap.replace(first, currentPa);
-            } else {
-                List<Order> newList = new ArrayList<>();
-                newList.add(ol.getOrder());
-                poMap.put(first, newList);
-                paMap.put(first, ol.getRequestedQuantity());
+        while (!(this.orders.isEmpty())) {
+            int biggest = this.orders.get(0).getOrderLines().size();
+            int bindex = 0;
+            for (int i = 1; i < this.orders.size(); i++) {
+                int current = this.orders.get(i).getOrderLines().size();
+                if (biggest < current) {
+                    biggest = current;
+                    bindex = i;
+                }
             }
+            temp.add(this.orders.remove(bindex));
         }
-        paMap = sortByValue(paMap);
-        //System.out.println(poMap.get("PROD00001"));
+        this.orders = temp;
 
-
+        this.lanes = new ArrayList<>(warehouse.getLanes());
+        this.currentSmall = orders.size()-1;
+        this.currentLarge = 0;
+        this.currentOrder = orders.get(currentSmall);
+        this.currentLines = currentOrder.getOrderLines();
+        this.currentLane = 0;
+        this.nextReleasing = 0;
     }
 
     // ----------------------------------------------------------------------------
@@ -85,12 +84,68 @@ public class Solution {
      *
      * @param currentTick
      */
+
+    private int modulo = 0;
+    private int huch = 0;
     public void tick(final int currentTick) throws Exception {
-        //String product = new ArrayList<>(paMap.keySet()).get(0);
-        //System.out.println(product);
+        if (!(orders.isEmpty())) {
+            //System.out.println(currentLines);
+            //System.out.println(orders.size());
+            //System.out.println("current: " + currentLane);
+            //System.out.println("release: " + nextReleasing);
+            //System.out.println(currentLines);
 
-        //poMap.get(product).get()
+            if (currentLines.isEmpty()) {
+                try {
+                    warehouse.releaseLane(lanes.get(nextReleasing));
+                    nextReleasing++;
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+                //System.out.println("mod: " + modulo);
 
+                if ((modulo % 2) == 0) {
+                    this.orders.remove(currentSmall);
+                    if (!(orders.isEmpty())) {
+                        this.currentOrder = orders.get(currentLarge);
+                    }
+                } else {
+                    this.orders.remove(currentLarge);
+                    currentSmall = orders.size()-1;
+                    if (!(orders.isEmpty())) {
+                        this.currentOrder = orders.get(currentSmall);
+                    }
+                }
+                modulo++;
+
+                this.currentLines = currentOrder.getOrderLines();
+
+                currentLane++;
+                if (nextReleasing == 10) {
+                    nextReleasing -= 10;
+                }
+                if (currentLane == 10) {
+                    currentLane -= 10;
+                }
+            }
+
+            if (!(orders.isEmpty())) {
+                OrderLine line = currentLines.get(0);
+                warehouse.fetchProduct(line.getProductCode());
+
+                try {
+                    warehouse.pickToLane(lanes.get(currentLane), line, line.getRequestedQuantity());
+
+                    currentLines.remove(0);
+                } catch (Exception ignored) {
+                }
+            }
+        } else {
+           if (warehouse.getReleasingLane() == null) {
+               huch++;
+               warehouse.releaseLane(lanes.get(huch));
+           }
+        }
     }
 
     public static <K, V extends Comparable<? super V>> Map<K, V> sortByValue(Map<K, V> map) {

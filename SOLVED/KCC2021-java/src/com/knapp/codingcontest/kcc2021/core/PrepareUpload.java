@@ -65,9 +65,11 @@ public final class PrepareUpload {
   // ----------------------------------------------------------------------------
 
   public static void createZipFile(final WarehouseInternal warehouse, final Solution solution) throws Exception {
+
     final File basedir = new File(PrepareUpload.PATH_OUTPUT);
     final String zipFileName = PrepareUpload.PATH_OUTPUT + File.separator + PrepareUpload.FILENAME_UPLOAD_ZIP;
     final File zipFile = new File(zipFileName);
+
     if (zipFile.exists()) {
       zipFile.delete();
     }
