@@ -15,6 +15,7 @@
 package com.knapp.codingcontest.solution;
 
 import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import com.knapp.codingcontest.data.InputData;
@@ -26,11 +27,6 @@ import com.knapp.codingcontest.warehouse.Robot;
 import com.knapp.codingcontest.warehouse.Storage;
 import com.knapp.codingcontest.warehouse.Warehouse;
 import com.knapp.codingcontest.warehouse.WarehouseInfo;
-import com.knapp.codingcontest.warehouse.ex.LocationLengthExceededException;
-import com.knapp.codingcontest.warehouse.ex.OrderIncompleteException;
-import com.knapp.codingcontest.warehouse.ex.RobotLengthExeededException;
-
-import javax.swing.text.Position;
 
 /**
  * This is the code YOU have to provide
@@ -79,11 +75,19 @@ public class Solution {
 
         // Sorting all products in to storage
         List<Product> remProd = new ArrayList<>(warehouse.getRemainingProductsAtEntry());
-        Map<String, Long> count = remProd.stream().collect(Collectors.groupingByConcurrent(Product::getCode, Collectors.counting()));
+        //Map<String, Long> count = remProd.stream().collect(Collectors.groupingByConcurrent(Product::getCode, Collectors.counting()));
+        Map<Product, Long> count = remProd.stream().collect(Collectors.groupingByConcurrent(Function.identity(), Collectors.counting()));
         count = sortByValue(count);
         //System.out.println(count);
-
-
+        /* TODO: make this WOOOOOORK
+            List<Product> temp = new ArrayList<>();
+            for (Map.Entry<Product, Long> entry : count.entrySet()) {
+                for (int i = 0; i < entry.getValue(); i++) {
+                    temp.add(entry.getKey());
+                }
+            }
+            remProd = temp;
+         */
 
         pullLoop:
         for (Product p : remProd) {
@@ -153,12 +157,23 @@ public class Solution {
                 List<Location> locs = map.get(need.getCode());
 
                 // First storage location still containing the product gets chosen
+                // also: try picking up (correct) products until its not possible anymore
                 for (Location loc : locs) {
                     if (!loc.getCurrentProducts().isEmpty()) {
-                        robot.pullFrom(loc);
+                        try {
+                            robot.pullFrom(loc);
+                        } catch (Exception e) {
+                            while (!robot.getCurrentProducts().isEmpty()) {
+                                robot.pushTo(exitLocation);
+                            }
+                            robot.pullFrom(loc);
+                        }
                         break;
                     }
                 }
+            }
+
+            while (!robot.getCurrentProducts().isEmpty()) {
                 robot.pushTo(exitLocation);
             }
         }
@@ -175,107 +190,6 @@ public class Solution {
 
         return result;
     }
-
-    /*
-    public void run() throws Exception {
-        HashMap<Product, List<Location>> map = new HashMap<>();
-        List<Product> remProd = new ArrayList<>(warehouse.getRemainingProductsAtEntry());
-        List<Product> current = new ArrayList<>(warehouse.nextOrder().getProducts());
-        Storage storage = warehouse.getStorage();
-        int storLevel = 0;
-        int storPos = 0;
-        List<Location> openedUp = new ArrayList<>();
-
-        while (!warehouse.getRemainingProductsAtEntry().isEmpty()) {
-            //System.out.println(a);
-            //System.out.println(storPos);
-            //System.out.println(current);
-            if (current.isEmpty()) {
-                current = new ArrayList<>(warehouse.nextOrder().getProducts());
-            }
-
-            // Check if top of entry stack is what we need
-            //System.out.println(remProd.get(0));
-            if (current.contains(remProd.get(0))) {
-                Product p = null;
-                for (int i = 0; i < current.size(); i++) {
-                    if (current.get(i) == remProd.get(0)) {
-                        p = current.remove(i);
-                        break;
-                    }
-                }
-
-                // If product doesnt fit on the robot, offload everything
-                assert p != null;
-                if (robot.getCurrentProducts().stream().mapToInt(Product::getLength).sum() + p.getLength() > robot.getLength()) {
-                    while (!(robot.getCurrentProducts().isEmpty())) {
-                        robot.pushTo(exitLocation);
-                    }
-                }
-
-                robot.pullFrom(entryLocation);
-                remProd.remove(0);
-            } else {
-                int count = 0;
-                for (Product rem : remProd) {
-                    if (current.contains(rem)) {
-                        break;
-                    }
-                    count++;
-                }
-                //System.out.println(count);
-
-                if (!(remProd.contains(current.get(0)))) {
-                    Product p = current.remove(0);
-
-                    List<Location> old = map.get(p);
-                    Location loc = old.remove(0);
-
-                    robot.pullFrom(loc);
-                    openedUp.add(loc);
-
-                    robot.pushTo(exitLocation);
-                    map.replace(p, old);
-                } else {
-                    for (int i = 0; i < count; i++) {
-                        robot.pullFrom(entryLocation);
-                        Product removed = remProd.remove(0);
-
-                        if (!openedUp.isEmpty()) {
-                            Location loc = openedUp.remove(0);
-                            //System.out.println(loc);
-                            robot.pushTo(loc);
-                            map.replace(removed, new ArrayList<>(Arrays.asList(loc)));
-                        } else {
-                            //System.out.println(robot.getCurrentProducts());
-                            robot.pushTo(storage.getLocation(storLevel, storPos));
-
-                            if (map.containsKey(removed)) {
-                                List<Location> curLocation = map.get(removed);
-                                curLocation.add(storage.getLocation(storLevel, storPos));
-                                map.replace(removed, curLocation);
-                            } else {
-                                map.put(removed, new ArrayList<>(Arrays.asList(storage.getLocation(storLevel, storPos))));
-                            }
-                            storPos++;
-
-                            if (storPos >= 900) {
-                                storLevel++;
-                                storPos = 0;
-                            }
-                        }
-                    }
-                }
-            }
-
-            while (!(robot.getCurrentProducts().isEmpty())) {
-                robot.pushTo(exitLocation);
-            }
-        }
-    }
-
-
-     */
 
     // ----------------------------------------------------------------------------
     // ----------------------------------------------------------------------------
