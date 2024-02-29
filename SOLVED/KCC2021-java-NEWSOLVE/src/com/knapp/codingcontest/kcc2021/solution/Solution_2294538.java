@@ -12,22 +12,17 @@
 
 package com.knapp.codingcontest.kcc2021.solution;
 
-import java.util.*;
-import java.util.stream.Collectors;
-
-import com.knapp.codingcontest.kcc2021.data.InputData;
-import com.knapp.codingcontest.kcc2021.data.Institute;
-import com.knapp.codingcontest.kcc2021.data.Packet;
-import com.knapp.codingcontest.kcc2021.data.Pallet;
+import com.knapp.codingcontest.kcc2021.data.*;
 import com.knapp.codingcontest.kcc2021.data.Pallet.PacketPos;
-import com.knapp.codingcontest.kcc2021.data.PalletType;
 import com.knapp.codingcontest.kcc2021.warehouse.Warehouse;
 import com.knapp.codingcontest.kcc2021.warehouse.WarehouseInfo;
+
+import java.util.*;
 
 /**
  * This is the code YOU have to provide
  */
-public class Solution {
+public class Solution_2294538 {
     public String getParticipantName() {
         return "David Koch";
     }
@@ -43,7 +38,7 @@ public class Solution {
 
     // ----------------------------------------------------------------------------
 
-    public Solution(final Warehouse warehouse, final InputData input) {
+    public Solution_2294538(final Warehouse warehouse, final InputData input) {
         this.input = input;
         this.warehouse = warehouse;
         // TODO: prepare data structures
@@ -61,18 +56,10 @@ public class Solution {
         List<PalletType> palletTypeList = palletTypes.stream().toList();
         Map<Integer, List<Pallet>> truckPallets = new HashMap<>();
 
-        packets.sort(new PacketAreaComparator());
-        packets = packets.reversed();
-
         outer:
         while(!packets.isEmpty()) {
             //System.out.println(packets.size());
-            Packet cPacket;
-            if (packets.size() % 2 == 0) {
-                cPacket = packets.remove(0);
-            } else {
-                cPacket = packets.remove(packets.size()-1);
-            }
+            Packet cPacket = packets.remove(0);
             int truck = cPacket.getTruckId();
             Pallet current;
 
@@ -83,7 +70,6 @@ public class Solution {
                 truckPallets.put(truck, newList);
             } else {
                 current = truckPallets.get(truck).get(truckPallets.get(truck).size()-1);
-                List<Packet> under = underEqualArea(packets, current.getLayer(0))
                 if (current.getCurrentStackedHeight() == 10
                         || (current.getCurrentWeight() + cPacket.getWeight()) > current.getType().getMaxWeight()
                         || cPacket.getWidth() > 8
@@ -127,17 +113,6 @@ public class Solution {
         }
 
         return palletTypeList.get(0);
-    }
-
-    public class PacketAreaComparator implements Comparator<Packet> {
-        @Override
-        public int compare(Packet o1, Packet o2) {
-            return Integer.compare(o1.getWidth()*o1.getLength(), o2.getWidth()*o2.getLength());
-        }
-    }
-
-    public List<Packet> underEqualArea(List<Packet> list, int area) {
-        return list.stream().filter(i -> i.getLength()*i.getWidth() <= area).toList();
     }
 
     // ----------------------------------------------------------------------------
